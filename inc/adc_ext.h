@@ -41,9 +41,11 @@ private:
     void CskLo() { PinClear(ADC_GPIO, ADC_CNV); }
 
 public:
+    VirtualTimer TmrSPICnv;
     uint32_t Rslt;
     void Init();
     uint16_t Measure();
+    void startADC_SPIMeasure();
     // Inner use
     void IrqDmaHandler();
     void SpiEnabled();

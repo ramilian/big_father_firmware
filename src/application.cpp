@@ -22,7 +22,7 @@ void App_t::Init() {
     PThread = chThdSelf();
     // ==== Sampling timer ====
     SamplingTmr.Init(TIM2);
-    SamplingTmr.SetUpdateFrequency(10000); // Start Fsmpl value  tsamp = 1 msec
+    SamplingTmr.SetUpdateFrequency(10000); // Start Fsmpl value  tsamp = 0.1 msec
     SamplingTmr.EnableIrq(TIM2_IRQn, IRQ_PRIO_MEDIUM);
     SamplingTmr.EnableIrqOnUpdate();
     SamplingTmr.Enable();
@@ -32,13 +32,25 @@ void App_t::ITask() {
     uint32_t EvtMsk = chEvtWaitAny(ALL_EVENTS);
     if(EvtMsk & EVTMSK_ADC_READY) {
 
-        int32_t adcMeasure = 0;
+/*    int16_t x0 = 0;
+    static int32_t summ = 0;
+    static int32_t count = 0;
+//    result = nullptr;
+    x0 = (int16_t)(Adc.Rslt & ResolutionMask);             //value
+    summ += x0;
+    count++;
+    if(count==10){
+        summ /= count;
+        Uart.Printf("***BIG FATHER: Measure = %d\r", summ);
+        summ = 0;
+        count = 0;
+    }*/
+
+
+        int32_t adcMeasure = -1;
         int32_t measureCount = -1;
         if ((measureCount = App.calculationADC_Rslt(&adcMeasure)) == 10) {
             Uart.Printf("***BIG FATHER: Measure = %d\r", adcMeasure);
-        }
-        else {
-            Uart.Printf("***BIG FATHER: Measure count = %d\r", measureCount);
         }
     }
     if(EvtMsk & EVTMSK_UART_RX_POLL) { Uart.PollRx(); } // Check if new cmd received
@@ -50,11 +62,10 @@ int32_t App_t::calculationADC_Rslt(int32_t *result)
     int16_t x0 = 0;
     static int32_t summ = 0;
     static int32_t count = 0;
-    result = nullptr;
     x0 = (int16_t)(Adc.Rslt & ResolutionMask);             //value
     summ += x0;
     count++;
-    retval = 10;
+    retval = count;
     if(count==10){
         summ /= count;
         result[0] = summ;
@@ -77,6 +88,16 @@ void App_t::OnUartCmd(Cmd_t *PCmd) {
 #if 1 // ============================= IRQ =====================================
 // Sampling IRQ: output y0 and start new measurement. ADC will inform app when completed.
 
+
+
+void App_t::IIrqHandler() {
+    Adc.startADC_SPIMeasure();
+//    CskHi();
+//    chVTSetI(&TmrSPICnv, US2ST(ADC_CONVERSATION_US), TmrCnvCallback, nullptr);
+}
+
+
+#if 1 // ==== Sampling Timer =====
 extern "C" {
 void TIM2_IRQHandler(void) {
     CH_IRQ_PROLOGUE();
@@ -88,19 +109,7 @@ void TIM2_IRQHandler(void) {
     chSysUnlockFromIsr();
     CH_IRQ_EPILOGUE();
 }
-
-//void TmrCnvCallback(void *p) { Uart.Printf("***BIG FATHER: Measure = %d\r", 0);Adc.SpiEnabled(); }
 }
-void TmrCnvCallback(void *p) { Uart.Printf("***BIG FATHER: Measure = %d\r", 0);Adc.SpiEnabled(); }
-
-void App_t::IIrqHandler() {
-    CskHi();
-    chVTSetI(&TmrSPICnv, US2ST(ADC_CONVERSATION_US), TmrCnvCallback, nullptr);
-}
-
-
-#if 1 // ==== Sampling Timer =====
-
 #endif
 
 #endif

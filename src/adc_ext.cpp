@@ -14,6 +14,10 @@ eAdc_t Adc;
 extern "C" {
 // DMA irq
 void SIrqDmaHandler(void *p, uint32_t flags) { Adc.IrqDmaHandler(); }
+
+void TmrCnvCallback(void *p) {
+    Adc.SpiEnabled();
+}
 } // extern c
 
 void eAdc_t::Init() {
@@ -34,14 +38,29 @@ void eAdc_t::Init() {
     dmaStreamSetMode      (ADC_DMA, ADC_DMA_MODE);
 }
 
+void eAdc_t::startADC_SPIMeasure() {
+    CskHi();
+
+    chSysLockFromIsr();
+    chVTSetI(&TmrSPICnv, US2ST(ADC_CONVERSATION_US), TmrCnvCallback, nullptr);
+    chSysUnlockFromIsr();
+/*    (void)ADC_SPI->DR;  // Clear input register
+    dmaStreamSetMemory0(ADC_DMA, &Adc.Rslt);
+    dmaStreamSetTransactionSize(ADC_DMA, 3);
+    dmaStreamSetMode(ADC_DMA, ADC_DMA_MODE);
+    dmaStreamEnable(ADC_DMA);
+    ISpi.Enable();
+    CskLo();*/
+}
+
 void eAdc_t::SpiEnabled() {
-    CskLo();
 //    (void)ADC_SPI->DR;  // Clear input register
     dmaStreamSetMemory0(ADC_DMA, &Adc.Rslt);
     dmaStreamSetTransactionSize(ADC_DMA, 3);
     dmaStreamSetMode(ADC_DMA, ADC_DMA_MODE);
     dmaStreamEnable(ADC_DMA);
     ISpi.Enable();
+    CskLo();
 }
 
 uint16_t eAdc_t::Measure() {
@@ -67,7 +86,7 @@ void eAdc_t::IrqDmaHandler() {
     Rslt = __REV(Rslt);
     Rslt >>= 10;
     Rslt &= 0xFFFF;
-    (void)ADC_SPI->DR;  // Clear input register
+    (void)ADC_SPI->DR;
 //    Uart.Printf("%u\r", Rslt);
     App.SignalAdcRsltReady();
     chSysUnlockFromIsr();
