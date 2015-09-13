@@ -478,12 +478,14 @@ enum SpiBaudrate_t {
     sbFdiv256 = 0b111,
 };
 
+enum SpiBiCnt_t {sbc8Bit, sbc16Bit};
+
 class Spi_t {
 private:
     SPI_TypeDef *PSpi;
 public:
     void Setup(SPI_TypeDef *Spi, BitOrder_t BitOrder,
-            CPOL_t CPOL, CPHA_t CPHA, SpiBaudrate_t Baudrate) {
+            CPOL_t CPOL, CPHA_t CPHA, SpiBaudrate_t Baudrate, SpiBiCnt_t BitCnt=sbc8Bit) {
         PSpi = Spi;
         // Clocking
         if     (PSpi == SPI1) { rccEnableSPI1(FALSE); }

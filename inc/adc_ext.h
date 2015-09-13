@@ -18,9 +18,13 @@
 #define ADC_GPIO    GPIOB
 
 #define ADC_CNV     12   //slave select Start conversion
-#define ADC_CLK     13   //serial clock
-#define ADC_MISO    14   //
-#define ADC_MOSI    15      //!CS
+#define ADC_SCLK     13   //serial clock
+#define ADC_SDO    14   //
+#define ADC_SDI    15      //!CS
+
+
+#define ADC_CNV_HI()  PinSet  (ADC_GPIO, ADC_CNV)
+#define ADC_CNV_LOW()  PinClear(ADC_GPIO, ADC_CNV)
 
 #define ADC_DMA         STM32_DMA1_STREAM0
 #define ADC_DMA_CHNL    3

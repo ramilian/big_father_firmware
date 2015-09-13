@@ -22,16 +22,16 @@ void TmrCnvCallback(void *p) {
 
 void eAdc_t::Init() {
     PinSetupOut(ADC_GPIO, ADC_CNV, omPushPull, pudNone);
-    PinSetupOut(ADC_GPIO, ADC_MOSI, omPushPull, pudNone);
-    PinSetupAlterFunc(ADC_GPIO, ADC_CLK, omPushPull, pudNone, AF5);
-    PinSetupAlterFunc(ADC_GPIO, ADC_MISO, omPushPull, pudNone, AF5);
-    CskLo();
-    PinSet(ADC_GPIO, ADC_MOSI);
+    PinSetupOut(ADC_GPIO, ADC_SDI, omPushPull, pudNone);
+    PinSetupAlterFunc(ADC_GPIO, ADC_SCLK, omPushPull, pudNone, AF5);
+    PinSetupAlterFunc(ADC_GPIO, ADC_SDO, omPushPull, pudNone, AF5);
+    PinSet(ADC_GPIO, ADC_SDI);  //select CS MODE
+    ADC_CNV_LOW();               // Idle mode
     // ==== SPI ====    MSB first, master, ClkLowIdle, FirstEdge, Baudrate=...
     // Select baudrate (2.4MHz max): APB=32MHz => div = 16
-    ISpi.Setup(ADC_SPI, boMSB, cpolIdleLow, cphaFirstEdge, sbFdiv16);
-    ISpi.SetModeRxOnly();
-    ISpi.EnableRxDma();
+    ISpi.Setup(ADC_SPI, boMSB, cpolIdleLow, cphaFirstEdge, sbFdiv2, sbc16Bit);
+//    ISpi.SetModeRxOnly();
+//    ISpi.EnableRxDma();
     // ==== DMA ====
     dmaStreamAllocate     (ADC_DMA, IRQ_PRIO_MEDIUM, SIrqDmaHandler, NULL);
     dmaStreamSetPeripheral(ADC_DMA, &ADC_SPI->DR);
@@ -41,9 +41,11 @@ void eAdc_t::Init() {
 void eAdc_t::startADC_SPIMeasure() {
     CskHi();
 
-    chSysLockFromIsr();
-    chVTSetI(&TmrSPICnv, US2ST(ADC_CONVERSATION_US), TmrCnvCallback, nullptr);
-    chSysUnlockFromIsr();
+//    chSysLockFromIsr();
+    TmrCnvCallback(nullptr);
+//    chVTSetI(&TmrSPICnv, US2ST(ADC_CONVERSATION_US), TmrCnvCallback, nullptr);
+
+//    chSysUnlockFromIsr();
 /*    (void)ADC_SPI->DR;  // Clear input register
     dmaStreamSetMemory0(ADC_DMA, &Adc.Rslt);
     dmaStreamSetTransactionSize(ADC_DMA, 3);

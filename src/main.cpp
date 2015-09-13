@@ -6,6 +6,7 @@
  * Created on: 21 дек. 2014 г.
  */
 
+
 #include "ch.h"
 #include "hal.h"
 #include "main.h"
@@ -14,6 +15,7 @@
 #include "cmd_uart.h"
 #include "application.h"
 #include "adc_ext.h"
+
 
 App_t App;
 
@@ -29,7 +31,7 @@ void TmrUartRxCallback(void *p) {
  */
 int main() {
 
-/*
+
     Clk.UpdateFreqValues();
 
     // ==== Setup clock ====
@@ -41,7 +43,7 @@ int main() {
     // 48/4 = 12 MHz core clock. APB1 & APB2 clock derive on AHB clock
     Clk.SetupBusDividers(ahbDiv4, apbDiv1, apbDiv1);
     if((ClkResult = Clk.SwitchToPLL()) == 0) Clk.HSIDisable();
-*/
+
 
     Clk.UpdateFreqValues();
 

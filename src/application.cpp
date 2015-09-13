@@ -92,8 +92,6 @@ void App_t::OnUartCmd(Cmd_t *PCmd) {
 
 void App_t::IIrqHandler() {
     Adc.startADC_SPIMeasure();
-//    CskHi();
-//    chVTSetI(&TmrSPICnv, US2ST(ADC_CONVERSATION_US), TmrCnvCallback, nullptr);
 }
 
 
