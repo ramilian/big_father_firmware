@@ -22,7 +22,6 @@ void eAdc_t::Init() {
     PinSetupOut(ADC_GPIO, ADC_CNV, omPushPull, pudNone);
     PinSetupOut(ADC_GPIO, ADC_SDI, omPushPull, pudNone);
     PinSetupAlterFunc(ADC_GPIO, ADC_SCLK, omPushPull, pudNone, AF5);
-//    PinSetupAlterFunc(ADC_GPIO, ADC_SDO, omPushPull, pudNone, AF5);
     PinSet(ADC_GPIO, ADC_SDI);  //select CS MODE
     ADC_CNV_LOW();               // Idle mode
     // ==== SPI ====    MSB first, master, ClkLowIdle, FirstEdge, Baudrate=...
@@ -32,17 +31,17 @@ void eAdc_t::Init() {
     //    ISpi.SetModeRxOnly();
     ISpi.EnableRxDma();
     // ==== DMA ====
-    dmaStreamAllocate     (ADC_DMA, IRQ_PRIO_MEDIUM, SIrqDmaHandler, NULL);
+/*    dmaStreamAllocate     (ADC_DMA, IRQ_PRIO_MEDIUM, SIrqDmaHandler, NULL);
     dmaStreamSetPeripheral(ADC_DMA, &ADC_SPI->DR);
     dmaStreamSetMode      (ADC_DMA, ADC_DMA_MODE);
     dmaStreamSetMemory0(ADC_DMA, &Adc.Rslt);
-    dmaStreamSetTransactionSize(ADC_DMA, 3);
-    dmaStreamEnable(ADC_DMA);
+    dmaStreamSetTransactionSize(ADC_DMA, 1);*/
+
 
 
     // ==== Sampling timer ====
     SamplingTmr.Init(TIM2);
-    SamplingTmr.SetUpdateFrequency(5/*10000*/); // Start Fsmpl value  tsamp = 0.1 msec
+    SamplingTmr.SetUpdateFrequency(10/*10000*/); // Start Fsmpl value  tsamp = 0.1 msec
     SamplingTmr.EnableIrq(TIM2_IRQn, IRQ_PRIO_MEDIUM);
     SamplingTmr.EnableIrqOnUpdate();
     SamplingTmr.Enable();
@@ -75,15 +74,15 @@ void eAdc_t::IIrqHandler() {
 void eAdc_t::IIrqSmpHandler() {
 
     ADC_CNV_HI();
-    PinSetupOut(ADC_GPIO, ADC_SDO, omPushPull, pudPullUp);
-
+    //PinSetupOut(ADC_GPIO, ADC_SDO, omPushPull, pudPullUp);
+    PinSetupIn(ADC_GPIO, ADC_SDO, pudPullUp);
     ISpi.Disable();
     IrqSDO.Setup(ADC_GPIO, ADC_SDO,ttFalling);
     IrqSDO.EnableIrq(IRQ_PRIO_MEDIUM);
 
     CskTmr.SetUpdateFrequency(500000);
     CskTmr.Enable();
-    LED1_TOGGLE();
+
     //Uart.Printf("Sampling timer IRQ\r");
 }
 
@@ -91,7 +90,14 @@ void eAdc_t::IIrqExtiHandler() {
     IrqSDO.CleanIrqFlag();
     IrqSDO.DisableIrq();
     PinSetupAlterFunc(ADC_GPIO, ADC_SDO, omPushPull, pudNone, AF5);
+    dmaStreamAllocate     (ADC_DMA, IRQ_PRIO_MEDIUM, SIrqDmaHandler, NULL);
+    dmaStreamSetPeripheral(ADC_DMA, &ADC_SPI->DR);
+    dmaStreamSetMode      (ADC_DMA, ADC_DMA_MODE);
+    dmaStreamSetMemory0(ADC_DMA, &Adc.Rslt);
+    dmaStreamSetTransactionSize(ADC_DMA, 1);
+    dmaStreamEnable(ADC_DMA);
     ISpi.Enable();
+    LED1_TOGGLE();
 }
 
 extern "C" {
@@ -117,7 +123,6 @@ void TIM5_IRQHandler(void) {
     CH_IRQ_EPILOGUE();
 }
 void EXTI15_10_IRQHandler(void) {
-    Uart.Printf("EXTI IRQ\r");
     CH_IRQ_PROLOGUE();
     chSysLockFromIsr();
     Adc.IIrqExtiHandler();
