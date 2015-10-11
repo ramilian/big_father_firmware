@@ -495,6 +495,7 @@ public:
         if(BitOrder == boLSB) tmp |= SPI_CR1_LSBFIRST;    // MSB/LSB
         if(CPOL == cpolIdleHigh) tmp |= SPI_CR1_CPOL;     // CPOL
         if(CPHA == cphaSecondEdge) tmp |= SPI_CR1_CPHA;   // CPHA
+        if(BitCnt == sbc16Bit) tmp |= SPI_CR1_DFF;
         tmp |= ((uint16_t)Baudrate) << 3;                 // Baudrate
         PSpi->CR1 = tmp;
         PSpi->CR2 = 0;

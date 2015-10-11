@@ -16,22 +16,14 @@
 
 extern eAdc_t Adc;
 
-
-
 void App_t::Init() {
     PThread = chThdSelf();
-    // ==== Sampling timer ====
-    SamplingTmr.Init(TIM2);
-    SamplingTmr.SetUpdateFrequency(10000); // Start Fsmpl value  tsamp = 0.1 msec
-    SamplingTmr.EnableIrq(TIM2_IRQn, IRQ_PRIO_MEDIUM);
-    SamplingTmr.EnableIrqOnUpdate();
-    SamplingTmr.Enable();
 }
 
 void App_t::ITask() {
     uint32_t EvtMsk = chEvtWaitAny(ALL_EVENTS);
     if(EvtMsk & EVTMSK_ADC_READY) {
-
+        LED1_ON();
 /*    int16_t x0 = 0;
     static int32_t summ = 0;
     static int32_t count = 0;
@@ -78,37 +70,9 @@ int32_t App_t::calculationADC_Rslt(int32_t *result)
 void App_t::OnUartCmd(Cmd_t *PCmd) {
     Uart.Printf("%S\r", PCmd->Name);
     uint32_t dw32 __attribute__((unused));  // May be unused in some cofigurations
-    if(PCmd->NameIs("#Ping")) Uart.Ack(OK);
-    else if (PCmd->NameIs("#Ledon")) {LED1_ON();}
-    else if (PCmd->NameIs("#Ledoff")) {LED1_OFF();}
+    if(PCmd->NameIs("#Ping") || PCmd->NameIs("#ping")) Uart.Ack(OK);
+    else if (PCmd->NameIs("#Ledon") || PCmd->NameIs("#ledon")) {LED1_ON();}
+    else if (PCmd->NameIs("#Ledoff") || PCmd->NameIs("#ledoff")) {LED1_OFF();}
+    else if (PCmd->NameIs("#Ledtoggle") || PCmd->NameIs("#ledtoggle")) {isLedToggle = !isLedToggle;}
     else if(*PCmd->Name == '#') Uart.Ack(CMD_UNKNOWN);  // reply only #-started stuff
 }
-
-
-#if 1 // ============================= IRQ =====================================
-// Sampling IRQ: output y0 and start new measurement. ADC will inform app when completed.
-
-
-
-void App_t::IIrqHandler() {
-    Adc.startADC_SPIMeasure();
-}
-
-
-#if 1 // ==== Sampling Timer =====
-extern "C" {
-void TIM2_IRQHandler(void) {
-    CH_IRQ_PROLOGUE();
-    chSysLockFromIsr();
-    if(TIM2->SR & TIM_SR_UIF) {
-        TIM2->SR &= ~TIM_SR_UIF;
-        App.IIrqHandler();
-    }
-    chSysUnlockFromIsr();
-    CH_IRQ_EPILOGUE();
-}
-}
-#endif
-
-#endif
-

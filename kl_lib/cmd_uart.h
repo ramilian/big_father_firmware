@@ -113,7 +113,7 @@ public:
 #if UART_RX_ENABLED
     void PollRx();
     // Command and reply
-    void Ack(int32_t Result) { Printf("\r\n#Ack %d", Result); }
+    void Ack(int32_t Result) { Printf("\r\n#Ack %d\r", Result); }
 #endif
 };
 

@@ -17,26 +17,25 @@
 #define ADC_SPI     SPI2
 #define ADC_GPIO    GPIOB
 
-#define ADC_CNV     12   //slave select Start conversion
-#define ADC_SCLK     13   //serial clock
-#define ADC_SDO    14   //
-#define ADC_SDI    15      //!CS
+#define ADC_CNV         12   //slave select Start conversion
+#define ADC_SCLK        13   //serial clock
+#define ADC_SDO         14   //
+#define ADC_SDI         15      //!CS
 
+#define ADC_CNV_HI()    PinSet  (ADC_GPIO, ADC_CNV)
+#define ADC_CNV_LOW()   PinClear(ADC_GPIO, ADC_CNV)
 
-#define ADC_CNV_HI()  PinSet  (ADC_GPIO, ADC_CNV)
-#define ADC_CNV_LOW()  PinClear(ADC_GPIO, ADC_CNV)
-
-#define ADC_DMA         STM32_DMA1_STREAM0
-#define ADC_DMA_CHNL    3
+#define ADC_DMA         STM32_DMA1_STREAM3
+#define ADC_DMA_CHNL    0
 #define ADC_DMA_MODE    STM32_DMA_CR_CHSEL(ADC_DMA_CHNL) | \
                         DMA_PRIORITY_MEDIUM | \
-                        STM32_DMA_CR_MSIZE_BYTE | \
-                        STM32_DMA_CR_PSIZE_BYTE | \
+                        STM32_DMA_CR_MSIZE_HWORD | \
+                        STM32_DMA_CR_PSIZE_HWORD | \
                         STM32_DMA_CR_MINC | \
                         STM32_DMA_CR_DIR_P2M |    /* Direction is peripheral to memory */ \
-                        STM32_DMA_CR_TCIE         /* Enable Transmission Complete IRQ */
+                        STM32_DMA_CR_TCIE |        /* Enable Transmission Complete IRQ */\
+                        STM32_DMA_CR_CIRC       /*Circ buffer*/
 
-#define ADC_CONVERSATION_US  2
 
 class eAdc_t {
 private:
@@ -45,14 +44,16 @@ private:
     void CskLo() { PinClear(ADC_GPIO, ADC_CNV); }
 
 public:
-    VirtualTimer TmrSPICnv;
+    Thread *PThread;
     uint32_t Rslt;
+    Timer_t CskTmr, SamplingTmr;
+    IrqPin_t IrqSDO;
     void Init();
-    uint16_t Measure();
-    void startADC_SPIMeasure();
     // Inner use
     void IrqDmaHandler();
-    void SpiEnabled();
+    void IIrqHandler();
+    void IIrqSmpHandler();
+    void IIrqExtiHandler();
 };
 
 extern eAdc_t Adc;
