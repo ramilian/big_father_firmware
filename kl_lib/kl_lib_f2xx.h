@@ -508,6 +508,11 @@ public:
         while(!(PSpi->SR & SPI_SR_RXNE));  // Wait for SPI transmission to complete
         return PSpi->DR;
     }
+    uint16_t ReadWriteWord(uint16_t AWord) {
+        PSpi->DR = AWord;
+        while(!(PSpi->SR & SPI_SR_RXNE));  // Wait for SPI transmission to complete
+        return PSpi->DR;
+    }
     // Flags
     void WaitBsyLo() { while(PSpi->SR & SPI_SR_BSY); }
     void WaitTxEHi() { while(!(PSpi->SR & SPI_SR_TXE)); }

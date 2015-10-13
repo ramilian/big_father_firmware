@@ -14,6 +14,8 @@
 #include "cmd_uart.h"
 #include "evt_mask.h"
 
+#define VERSION     "v0.3"
+
 #define LEDS_GPIO           GPIOA
 #define LED1_PIN            0
 

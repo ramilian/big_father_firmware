@@ -46,10 +46,9 @@ int main() {
     // ==== Setup clock ====
     uint8_t ClkResult = 1;
     Clk.SetupFlashLatency(120);  // Setup Flash Latency for clock in MHz
-        // 8 MHz/4 = 2; 2*192 = 384; 384/8 = 64 (preAHB divider); 384/8 = 48 (USB clock)
-    // 8 MHz/2 = 4; 4*180 = 720; 720/6 = 90 (preAHB divider); 720/8 = 48 (USB clock)
+    // 8 MHz/2 = 4; 4*180 = 720; 720/6 = 120 (preAHB divider); 720/15 = 48 (USB clock)
     Clk.SetupPLLDividers(2, 180, pllSysDiv6, 15);
-        // 90/1 = 90 MHz core clock.    (90|45 MHz) APB1|APB2 = AHB/apbDiv APB1 & APB2 clock derive on AHB clock
+    // 120/1 = 120 MHz core clock.    (120|60 MHz) APB1|APB2 = AHB/apbDiv APB1 & APB2 clock derive on AHB clock
     Clk.SetupBusDividers(ahbDiv1, apbDiv1, apbDiv2);
     if((ClkResult = Clk.SwitchToPLL()) == 0) Clk.HSIDisable();
     Clk.UpdateFreqValues();
@@ -62,7 +61,11 @@ int main() {
     // Leds
     PinSetupOut(LEDS_GPIO, LED1_PIN, omPushPull);
     Uart.Init(115200);
+    Uart.Printf("BF frimware version %s\r", VERSION);
     Uart.Printf("\rBF is started at AHB=%uMHz APB1=%uMHz  APB2=%uMHz\r", Clk.AHBFreqHz/1000000, Clk.APB1FreqHz/1000000, Clk.APB2FreqHz/1000000);
+    Uart.Printf("UART           ..........  [OK]\r");
+    Uart.Printf("Main thread    ..........  [OK]\r");
+    Uart.Printf("ADC AD7687     ..........  [OK]\r");
     if(ClkResult != 0) { Uart.Printf("\rXTAL failure\r"); }
     else { LED1_ON(); }
 
@@ -75,6 +78,7 @@ int main() {
     chVTSetI(&App.TmrLedBlink,    MS2ST(LED_BLINK_MS), TmrLedBlinkCallback, nullptr);
     chSysUnlock();
     LED1_OFF();
+
     // Main thread
     while(TRUE){ App.ITask(); }
 }

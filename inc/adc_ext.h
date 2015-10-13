@@ -13,7 +13,7 @@
 #include "kl_lib_f2xx.h"
 #include "hal.h"
 
-#define VERSION     "v0.2"
+
 #define ADC_SPI     SPI2
 #define ADC_GPIO    GPIOB
 
@@ -45,7 +45,8 @@ private:
 
 public:
     Thread *PThread;
-    uint32_t Rslt;
+    uint16_t Rslt;
+    int16_t count_measure;
     Timer_t CskTmr, SamplingTmr;
     IrqPin_t IrqSDO;
     void Init();
@@ -54,6 +55,7 @@ public:
     void IIrqHandler();
     void IIrqSmpHandler();
     void IIrqExtiHandler();
+//    eAdc_t(): measureRslt(0), PThread(nullptr), Rslt(0), count_measure(0) {}
 };
 
 extern eAdc_t Adc;

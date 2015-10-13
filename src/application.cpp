@@ -23,48 +23,21 @@ void App_t::Init() {
 void App_t::ITask() {
     uint32_t EvtMsk = chEvtWaitAny(ALL_EVENTS);
     if(EvtMsk & EVTMSK_ADC_READY) {
-        LED1_ON();
-/*    int16_t x0 = 0;
-    static int32_t summ = 0;
-    static int32_t count = 0;
-//    result = nullptr;
-    x0 = (int16_t)(Adc.Rslt & ResolutionMask);             //value
-    summ += x0;
-    count++;
-    if(count==10){
-        summ /= count;
-        Uart.Printf("***BIG FATHER: Measure = %d\r", summ);
-        summ = 0;
-        count = 0;
-    }*/
-
-
-        int32_t adcMeasure = -1;
-        int32_t measureCount = -1;
-        if ((measureCount = App.calculationADC_Rslt(&adcMeasure)) == 10) {
-            Uart.Printf("***BIG FATHER: Measure = %d\r", adcMeasure);
+        LED1_TOGGLE();
+        int16_t x0 = 0;
+        static int32_t summ = 0;
+        static int32_t count = 0;
+        x0 = (int16_t)(Adc.Rslt & ResolutionMask);             //value
+        summ += (int32_t)x0;
+        count++;
+        if(count==10){
+            summ /= count;
+            Uart.Printf("***BIG FATHER: Measure = %d\r", summ);
+            summ = 0;
+            count = 0;
         }
     }
     if(EvtMsk & EVTMSK_UART_RX_POLL) { Uart.PollRx(); } // Check if new cmd received
-}
-
-int32_t App_t::calculationADC_Rslt(int32_t *result)
-{
-    int32_t retval = -1;
-    int16_t x0 = 0;
-    static int32_t summ = 0;
-    static int32_t count = 0;
-    x0 = (int16_t)(Adc.Rslt & ResolutionMask);             //value
-    summ += x0;
-    count++;
-    retval = count;
-    if(count==10){
-        summ /= count;
-        result[0] = summ;
-        summ = 0;
-        count = 0;
-    }
-    return retval;
 }
 
 void App_t::OnUartCmd(Cmd_t *PCmd) {
