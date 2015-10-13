@@ -26,7 +26,6 @@ public:
 
     void Init();
     void SignalAdcRsltReady() { chEvtSignalI(PThread, EVTMSK_ADC_READY); }
-    int32_t calculationADC_Rslt(int32_t *result);
     // Leds
     void LedBlink(uint32_t Duration_ms);
     // Events
