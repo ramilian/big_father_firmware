@@ -22,6 +22,7 @@
 
 
 App_t App;
+Adc_t iAdc;
 
 void TmrUartRxCallback(void *p) {
     chSysLockFromIsr();
@@ -38,6 +39,14 @@ void TmrLedBlinkCallback(void *p) {
     chSysUnlockFromIsr();
 }
 
+void TmrAdcMeasureCallback(void *p) {
+    chSysLockFromIsr();
+    iAdc.Measure();
+
+    chVTSetI(&App.TmrAdcMeasure, MS2ST(ADC_MEASURE_MS), TmrAdcMeasureCallback, nullptr);
+    chSysUnlockFromIsr();
+
+}
 /*
  * Application entry point.
  */
@@ -61,23 +70,25 @@ int main() {
     // Leds
     PinSetupOut(LEDS_GPIO, LED1_PIN, omPushPull);
     Uart.Init(115200);
-    Uart.Printf("BF frimware version %s\r", VERSION);
+    Uart.Printf("\rBF frimware version %s\r", VERSION);
     Uart.Printf("\rBF is started at AHB=%uMHz APB1=%uMHz  APB2=%uMHz\r", Clk.AHBFreqHz/1000000, Clk.APB1FreqHz/1000000, Clk.APB2FreqHz/1000000);
     Uart.Printf("UART           ..........  [OK]\r");
     Uart.Printf("Main thread    ..........  [OK]\r");
     Uart.Printf("ADC AD7687     ..........  [OK]\r");
     if(ClkResult != 0) { Uart.Printf("\rXTAL failure\r"); }
-    else { LED1_ON(); }
+    else { /*LED1_ON();*/ }
 
     App.Init(); // Init main thread
     Adc.Init(); // Init ADC thread
+//    iAdc.Init();
     chThdSleepMilliseconds(1000);
 
     chSysLock();
     chVTSetI(&App.TmrUartRx,    MS2ST(UART_RX_POLLING_MS), TmrUartRxCallback, nullptr);
     chVTSetI(&App.TmrLedBlink,    MS2ST(LED_BLINK_MS), TmrLedBlinkCallback, nullptr);
+//    chVTSetI(&App.TmrAdcMeasure,    MS2ST(ADC_MEASURE_MS), TmrAdcMeasureCallback, nullptr);
     chSysUnlock();
-    LED1_OFF();
+//    LED1_OFF();
 
     // Main thread
     while(TRUE){ App.ITask(); }

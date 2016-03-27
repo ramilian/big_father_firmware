@@ -10,7 +10,8 @@
 
 #include "kl_lib_f2xx.h"
 #include "clocking.h"
-
+#include "cmd_uart.h"
+#include "../src/main.h"
 // =============================== Constants ===================================
 // ADC sampling_times
 #define ADC_SampleTime_1_5Cycles                     ((uint32_t)0x00000000)
@@ -30,7 +31,7 @@
                             STM32_DMA_CR_PSIZE_HWORD | \
                             STM32_DMA_CR_MINC |       /* Memory pointer increase */ \
                             STM32_DMA_CR_DIR_P2M |    /* Direction is peripheral to memory */ \
-                            STM32_DMA_CR_TCIE         /* Enable Transmission Complete IRQ */
+                            STM32_DMA_CR_TCIE       /* Enable Transmission Complete IRQ */
 
 // ================================= Config ====================================
 struct AdcChnl_t {
@@ -41,22 +42,22 @@ struct AdcChnl_t {
 
 // ADC channels config: config it.
 const AdcChnl_t AdcChannels[] = {
-        {10, ADC_SampleTime_55_5Cycles, 1},
-        {10, ADC_SampleTime_55_5Cycles, 2},
-        {10, ADC_SampleTime_55_5Cycles, 3},
-        {10, ADC_SampleTime_55_5Cycles, 4},
-        {10, ADC_SampleTime_55_5Cycles, 5},
+        {10, ADC_SampleTime_1_5Cycles, 1},
+        {11, ADC_SampleTime_7_5Cycles, 2},
+        {12, ADC_SampleTime_13_5Cycles, 3},
+        {13, ADC_SampleTime_28_5Cycles, 4},
+/*        {10, ADC_SampleTime_55_5Cycles, 5},
         {10, ADC_SampleTime_55_5Cycles, 6},
         {10, ADC_SampleTime_55_5Cycles, 7},
         {10, ADC_SampleTime_55_5Cycles, 8},
         {10, ADC_SampleTime_55_5Cycles, 9},
         {10, ADC_SampleTime_55_5Cycles, 10},
-        {10, ADC_SampleTime_55_5Cycles, 11},
-        {10, ADC_SampleTime_55_5Cycles, 12},
-        {10, ADC_SampleTime_55_5Cycles, 13},
+        {11, ADC_SampleTime_55_5Cycles, 11},
+        {12, ADC_SampleTime_55_5Cycles, 12},
+        {13, ADC_SampleTime_55_5Cycles, 13},//
         {10, ADC_SampleTime_55_5Cycles, 14},
         {10, ADC_SampleTime_55_5Cycles, 15},
-        {10, ADC_SampleTime_55_5Cycles, 16},
+        {10, ADC_SampleTime_55_5Cycles, 16},*/
 };
 
 #define ADC_CHANNEL_CNT     countof(AdcChannels)
@@ -70,6 +71,7 @@ enum ADCDiv_t {
     adcDiv8 = (uint32_t)(0b11 << 16),
 };
 
+
 class Adc_t {
 private:
     inline void SetupClk(ADCDiv_t Div) { ADC->CCR |= (uint32_t)Div; }
@@ -81,6 +83,7 @@ private:
     inline bool ConversionCompleted() { return (ADC1->SR & ADC_SR_EOC); }
     inline uint16_t IResult() { return ADC1->DR; }
 public:
+    Thread *PThread;
     uint16_t Result[ADC_BUF_SZ];
     void Init();
     void Measure();

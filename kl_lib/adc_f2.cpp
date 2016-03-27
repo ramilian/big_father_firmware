@@ -6,26 +6,33 @@
  */
 
 #include "adc_f2.h"
+#include "application.h"
+#include "cmd_uart.h"
 
 static Thread *PAdcThread;
+extern App_t App;
 
 // Wrapper for IRQ
 extern "C" {
 void AdcTxIrq(void *p, uint32_t flags) {
-    dmaStreamDisable(ADC_DMA);
-    // Resume thread if any
     chSysLockFromIsr();
+    LED1_TOGGLE();
+    dmaStreamDisable(ADC_DMA);
+
+    // Resume thread if any
     if(PAdcThread != NULL) {
         if(PAdcThread->p_state == THD_STATE_SUSPENDED) chSchReadyI(PAdcThread);
         PAdcThread = NULL;
-    }
+   }
+    chEvtSignalI(App.PThread, EVTMSK_ADC_RSLT_READY);
     chSysUnlockFromIsr();
 }
 } // extern C
 
 void Adc_t::Init() {
+    PThread = chThdSelf();
     rccEnableADC1(FALSE);   // Enable digital clock
-    SetupClk(adcDiv4);      // Setup ADCCLK
+    SetupClk(adcDiv8);      // Setup ADCCLK
     SetChannelCount(ADC_CHANNEL_CNT);
     for(uint8_t i = 0; i < ADC_CHANNEL_CNT; i++) ChannelConfig(AdcChannels[i]);
     // ==== DMA ====
@@ -49,6 +56,8 @@ void Adc_t::Measure() {
     StartConversion();
     chSchGoSleepS(THD_STATE_SUSPENDED);
     chSysUnlock();
+//    Uart.Printf("ADC Result = %d!!!!!!!!!!!!!!!!!!!!\r",(int32_t)IResult());
+//    LED1_TOGGLE();
     ADC1->CR2 = 0;
 }
 

@@ -13,9 +13,8 @@
 
 #include <cstdlib>
 
-
 extern eAdc_t Adc;
-
+extern Adc_t iAdc;
 void App_t::Init() {
     PThread = chThdSelf();
 }
@@ -23,21 +22,28 @@ void App_t::Init() {
 void App_t::ITask() {
     uint32_t EvtMsk = chEvtWaitAny(ALL_EVENTS);
     if(EvtMsk & EVTMSK_ADC_READY) {
-        LED1_TOGGLE();
-        int16_t x0 = 0;
         static int32_t summ = 0;
         static int32_t count = 0;
-        x0 = (int16_t)(Adc.Rslt & ResolutionMask);             //value
+        int16_t x0 = (int16_t)(Adc.Rslt & ResolutionMask);             //value
         summ += (int32_t)x0;
         count++;
         if(count==10){
             summ /= count;
-            Uart.Printf("***BIG FATHER: Measure = %d\r", summ);
+            Uart.Printf("%d\r", summ);
             summ = 0;
             count = 0;
         }
+        Adc.Rslt =0;
     }
     if(EvtMsk & EVTMSK_UART_RX_POLL) { Uart.PollRx(); } // Check if new cmd received
+    if(EvtMsk & EVTMSK_ADC_RSLT_READY) {
+/*
+        Uart.Printf("ADC1 = %d  ADC2 = %d  ADC3 = %d  ADC4 = %d\r",   (int32_t)iAdc.Result[0], \
+                                                                      (int32_t)iAdc.Result[1], \
+                                                                      (int32_t)iAdc.Result[2], \
+                                                                      (int32_t)iAdc.Result[3]);
+*/
+    }
 }
 
 void App_t::OnUartCmd(Cmd_t *PCmd) {

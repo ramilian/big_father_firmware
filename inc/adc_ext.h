@@ -13,6 +13,8 @@
 #include "kl_lib_f2xx.h"
 #include "hal.h"
 
+#define FSAMPL_ADC      100/*00*/     // /*10000*/ Hz  Start Fsmpl value  tsamp = 0.1 msec
+#define FSAMPL_CNV      500000   // request 2 usec
 
 #define ADC_SPI     SPI2
 #define ADC_GPIO    GPIOB
@@ -25,16 +27,14 @@
 #define ADC_CNV_HI()    PinSet  (ADC_GPIO, ADC_CNV)
 #define ADC_CNV_LOW()   PinClear(ADC_GPIO, ADC_CNV)
 
-#define ADC_DMA         STM32_DMA1_STREAM3
-#define ADC_DMA_CHNL    0
-#define ADC_DMA_MODE    STM32_DMA_CR_CHSEL(ADC_DMA_CHNL) | \
+#define EADC_DMA         STM32_DMA1_STREAM3
+#define EADC_DMA_CHNL    0
+#define EADC_DMA_MODE    STM32_DMA_CR_CHSEL(EADC_DMA_CHNL) | \
                         DMA_PRIORITY_MEDIUM | \
                         STM32_DMA_CR_MSIZE_HWORD | \
                         STM32_DMA_CR_PSIZE_HWORD | \
-                        STM32_DMA_CR_MINC | \
                         STM32_DMA_CR_DIR_P2M |    /* Direction is peripheral to memory */ \
-                        STM32_DMA_CR_TCIE |        /* Enable Transmission Complete IRQ */\
-                        STM32_DMA_CR_CIRC       /*Circ buffer*/
+                        STM32_DMA_CR_TCIE         /* Enable Transmission Complete IRQ */
 
 
 class eAdc_t {
@@ -45,7 +45,7 @@ private:
 
 public:
     Thread *PThread;
-    uint16_t Rslt;
+    uint32_t Rslt;
     int16_t count_measure;
     Timer_t CskTmr, SamplingTmr;
     IrqPin_t IrqSDO;

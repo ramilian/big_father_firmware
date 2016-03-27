@@ -26,12 +26,12 @@ void eAdc_t::Init() {
     PinSet(ADC_GPIO, ADC_SDI);  //select CS MODE
     ADC_CNV_LOW();               // Idle mode
     // ==== DMA ====
-    dmaStreamAllocate     (ADC_DMA, IRQ_PRIO_MEDIUM, SIrqDmaHandler, NULL);
-    dmaStreamSetPeripheral(ADC_DMA, &ADC_SPI->DR);
-    dmaStreamSetMode      (ADC_DMA, ADC_DMA_MODE);
-    dmaStreamSetMemory0(ADC_DMA, &Adc.Rslt);
-    dmaStreamSetTransactionSize(ADC_DMA, 1);
-    dmaStreamEnable(ADC_DMA);
+    dmaStreamAllocate     (EADC_DMA, IRQ_PRIO_MEDIUM, SIrqDmaHandler, NULL);
+    dmaStreamSetPeripheral(EADC_DMA, &ADC_SPI->DR);
+    dmaStreamSetMode      (EADC_DMA, EADC_DMA_MODE);
+    dmaStreamSetMemory0(EADC_DMA, &Adc.Rslt);
+    dmaStreamSetTransactionSize(EADC_DMA, 1);
+    dmaStreamEnable(EADC_DMA);
     // ==== SPI ====    MSB first, master, ClkLowIdle, FirstEdge, Baudrate=...
     // Select baudrate (2.4MHz max): APB=120MHz => div = 64
     ISpi.Setup(ADC_SPI, boMSB, cpolIdleLow, cphaFirstEdge, sbFdiv64, sbc16Bit);
@@ -42,13 +42,13 @@ void eAdc_t::Init() {
 
     // ==== Sampling timer ====
     SamplingTmr.Init(TIM2);
-    SamplingTmr.SetUpdateFrequency(100/*10000*/); // Start Fsmpl value  tsamp = 0.1 msec
+    SamplingTmr.SetUpdateFrequency(FSAMPL_ADC);
     SamplingTmr.EnableIrq(TIM2_IRQn, IRQ_PRIO_MEDIUM);
     SamplingTmr.EnableIrqOnUpdate();
     SamplingTmr.Enable();
 
     CskTmr.Init(TIM5);
-    CskTmr.SetUpdateFrequency(500000); // Start Fsmpl value  tsamp = 2 usec
+    CskTmr.SetUpdateFrequency(FSAMPL_CNV); // request 2 usec
     CskTmr.EnableIrq(TIM5_IRQn, IRQ_PRIO_MEDIUM);
     CskTmr.EnableIrqOnUpdate();
     CskTmr.Disable();
@@ -57,27 +57,29 @@ void eAdc_t::Init() {
 
 void eAdc_t::IrqDmaHandler() {
     chSysLockFromIsr();
-    dmaStreamDisable(ADC_DMA);
+    dmaStreamDisable(EADC_DMA);
     App.SignalAdcRsltReady();
-    SPI1->DR = 0;
     chSysUnlockFromIsr();
 }
 
 // CNV IRQ
 void eAdc_t::IIrqHandler() {
     CskTmr.Disable();
-    dmaStreamAllocate     (ADC_DMA, IRQ_PRIO_MEDIUM, SIrqDmaHandler, NULL);
-    dmaStreamSetPeripheral(ADC_DMA, &ADC_SPI->DR);
-    dmaStreamSetMode      (ADC_DMA, ADC_DMA_MODE);
-    dmaStreamSetMemory0(ADC_DMA, &Adc.Rslt);
-    dmaStreamSetTransactionSize(ADC_DMA, 1);
-    dmaStreamEnable(ADC_DMA);
+    SPI1->DR = 0;
+    Adc.Rslt = 0;
+    dmaStreamAllocate     (EADC_DMA, IRQ_PRIO_MEDIUM, SIrqDmaHandler, NULL);
+    dmaStreamSetPeripheral(EADC_DMA, &ADC_SPI->DR);
+    dmaStreamSetMode      (EADC_DMA, EADC_DMA_MODE);
+    dmaStreamSetMemory0(EADC_DMA, &Adc.Rslt);
+    dmaStreamSetTransactionSize(EADC_DMA, 1);
+    dmaStreamEnable(EADC_DMA);
     ADC_CNV_LOW();
 }
 // Sampling IRQ
 void eAdc_t::IIrqSmpHandler() {
     ADC_CNV_HI();
     CskTmr.Enable();
+    LED1_TOGGLE();
 }
 
 
@@ -89,12 +91,12 @@ void eAdc_t::IIrqExtiHandler() {
     PinSetupAlterFunc(ADC_GPIO, ADC_SDO, omPushPull, pudNone, AF5);
 
     (void)ADC_SPI->DR;  // Clear input register
-    dmaStreamAllocate     (ADC_DMA, IRQ_PRIO_MEDIUM, SIrqDmaHandler, NULL);
-    dmaStreamSetPeripheral(ADC_DMA, &ADC_SPI->DR);
-    dmaStreamSetMode      (ADC_DMA, ADC_DMA_MODE);
-    dmaStreamSetMemory0(ADC_DMA, &Adc.Rslt);
-    dmaStreamSetTransactionSize(ADC_DMA, 1);
-    dmaStreamEnable(ADC_DMA);
+    dmaStreamAllocate     (EADC_DMA, IRQ_PRIO_MEDIUM, SIrqDmaHandler, NULL);
+    dmaStreamSetPeripheral(EADC_DMA, &ADC_SPI->DR);
+    dmaStreamSetMode      (EADC_DMA, EADC_DMA_MODE);
+    dmaStreamSetMemory0(EADC_DMA, &Adc.Rslt);
+    dmaStreamSetTransactionSize(EADC_DMA, 1);
+    dmaStreamEnable(EADC_DMA);
     ISpi.Enable();
 
 //    LED1_TOGGLE();
