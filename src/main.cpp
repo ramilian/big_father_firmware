@@ -91,7 +91,21 @@ int main() {
 //    LED1_OFF();
 
     // Main thread
-    while(TRUE){ App.ITask(); }
+    while(TRUE){
+        LED1_TOGGLE();
+
+        // Start conversion
+        ADC_CNV_HI();
+        chThdSleepMicroseconds((int32_t)((1.0/FSAMPL_CNV)*1000000));
+        ADC_CNV_LOW();
+        // Read result
+//        int16_t Rslt = Spi.ReadWriteWord(0);
+        int16_t Rslt = Adc.ISpi.ReadWriteWord(0);
+        SPI1->DR = 0;
+        Uart.Printf("\r%d", Rslt);
+        chThdSleepMicroseconds((int32_t)((1.0/FSAMPL_ADC)*1000000));
+
+    }
 }
 
 

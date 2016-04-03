@@ -13,7 +13,7 @@
 #include "kl_lib_f2xx.h"
 #include "hal.h"
 
-#define FSAMPL_ADC      100/*00*/     // /*10000*/ Hz  Start Fsmpl value  tsamp = 0.1 msec
+#define FSAMPL_ADC      500/*00*/     // /*10000*/ Hz  Start Fsmpl value  tsamp = 0.1 msec
 #define FSAMPL_CNV      500000   // request 2 usec
 
 #define ADC_SPI     SPI2
@@ -39,11 +39,12 @@
 
 class eAdc_t {
 private:
-    Spi_t ISpi;
+
     void CskHi() { PinSet(ADC_GPIO, ADC_CNV); }
     void CskLo() { PinClear(ADC_GPIO, ADC_CNV); }
 
 public:
+    Spi_t ISpi;
     Thread *PThread;
     uint32_t Rslt;
     int16_t count_measure;

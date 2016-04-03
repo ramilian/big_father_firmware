@@ -25,6 +25,7 @@ void eAdc_t::Init() {
     PinSetupAlterFunc(ADC_GPIO, ADC_SDO, omPushPull, pudNone, AF5);
     PinSet(ADC_GPIO, ADC_SDI);  //select CS MODE
     ADC_CNV_LOW();               // Idle mode
+/*
     // ==== DMA ====
     dmaStreamAllocate     (EADC_DMA, IRQ_PRIO_MEDIUM, SIrqDmaHandler, NULL);
     dmaStreamSetPeripheral(EADC_DMA, &ADC_SPI->DR);
@@ -34,12 +35,14 @@ void eAdc_t::Init() {
     dmaStreamEnable(EADC_DMA);
     // ==== SPI ====    MSB first, master, ClkLowIdle, FirstEdge, Baudrate=...
     // Select baudrate (2.4MHz max): APB=120MHz => div = 64
+*/
     ISpi.Setup(ADC_SPI, boMSB, cpolIdleLow, cphaFirstEdge, sbFdiv64, sbc16Bit);
-    ISpi.SetModeRxOnly();
-    ISpi.EnableRxDma();
+//    ISpi.SetModeRxOnly();
+//    ISpi.EnableRxDma();
     ISpi.Enable();
 
 
+/*
     // ==== Sampling timer ====
     SamplingTmr.Init(TIM2);
     SamplingTmr.SetUpdateFrequency(FSAMPL_ADC);
@@ -52,6 +55,7 @@ void eAdc_t::Init() {
     CskTmr.EnableIrq(TIM5_IRQn, IRQ_PRIO_MEDIUM);
     CskTmr.EnableIrqOnUpdate();
     CskTmr.Disable();
+*/
 }
 
 
